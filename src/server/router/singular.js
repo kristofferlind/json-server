@@ -1,4 +1,5 @@
 var express = require('express')
+var jsonPatch = require('fast-json-patch');
 
 module.exports = function (db, name) {
   var router = express.Router()
@@ -20,8 +21,9 @@ module.exports = function (db, name) {
       db.set(name, req.body)
         .value()
     } else {
-      db.get(name)
-        .assign(req.body)
+      var item = db.get(name).value();
+      jsonPatch.apply(item, req.body.patches);
+      db.set(name, item)
         .value()
     }
 

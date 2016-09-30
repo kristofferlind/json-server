@@ -551,7 +551,7 @@ describe('Server', function () {
     it('should respond with json and update resource', function (done) {
       request(server)
         .patch('/posts/1')
-        .send({body: 'bar'})
+        .send({ patches: [{ op: 'replace', path: '/body', value: 'bar' }]})
         .expect('Content-Type', /json/)
         .expect({id: 1, body: 'bar'})
         .expect(200)
@@ -566,7 +566,7 @@ describe('Server', function () {
     it('should respond with 404 if resource is not found', function (done) {
       request(server)
         .patch('/posts/9001')
-        .send({body: 'bar'})
+        .send({ patches: [{ op: 'replace', path: '/body', value: 'bar' }]})
         .expect('Content-Type', /json/)
         .expect({})
         .expect(404, done)

@@ -2,6 +2,7 @@ var express = require('express')
 var _ = require('lodash')
 var pluralize = require('pluralize')
 var utils = require('../utils')
+var jsonPatch = require('fast-json-patch');
 
 module.exports = function (db, name) {
   // Create router
@@ -248,6 +249,10 @@ module.exports = function (db, name) {
   // PUT /name/:id
   // PATCH /name/:id
   function update (req, res, next) {
+    function patchItem(item, patches) {
+      jsonPatch.apply(item, patches);
+      return item;
+    }
     for (var key in req.body) {
       req.body[key] = utils.toNative(req.body[key])
     }
@@ -255,11 +260,17 @@ module.exports = function (db, name) {
     var id = utils.toNative(req.params.id)
     var chain = db.get(name)
 
-    chain = req.method === 'PATCH'
-      ? chain.updateById(id, req.body)
-      : chain.replaceById(id, req.body)
-
-    var resource = chain.value()
+    if (req.method === 'PATCH') {
+      const item = chain.getById(id).value();
+      if (item) {
+        resource = patchItem(item, req.body.patches);
+      } else {
+        resource = {};
+        res.status(404);
+      }
+    } else {
+      resource = chain.replaceById(id, req.body).value();
+    }
 
     if (resource) {
       res.locals.data = resource

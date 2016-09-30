@@ -56,7 +56,7 @@ describe('Server', function () {
     it('should update resource', function (done) {
       request(server)
         .patch('/user')
-        .send({ name: 'bar' })
+        .send({ patches: [{ op: 'replace', path: '/name', value: 'bar' }]})
         .expect({ name: 'bar', email: 'foo@example.com' })
         .expect(200, done)
     })
